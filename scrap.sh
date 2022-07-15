@@ -57,18 +57,20 @@ do
   done
 done
 
-jq '{ data: [ inputs ] | add } | .data[].no |= split("+")' $RAW_DIRECTORY/* > $OUTPUT_DIRECTORY/all.json
+jq '(([ ., inputs ] | add) | .[].no |= split("+"))
+| .[].date |= (strptime("%d/%m/%Y") | mktime | strftime("%Y-%m-%d"))
+| . |= sort_by(.date) | reverse' $RAW_DIRECTORY/* > $OUTPUT_DIRECTORY/all.json
 
 jq '{ 
-  total: .data | length, 
+  total: . | length,
   stats_without_sno: (
-    [.data[].no[]] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
+    [.[].no[]] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
   ) | add, 
   stats_with_sno: (
-    [.data[].no[],.data[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
+    [.[].no[],.[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
   ) | add,
   stats_sno_only: (
-    [.data[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
+    [.[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
   ) | add
 }' $OUTPUT_DIRECTORY/all.json > $OUTPUT_DIRECTORY/stats.json
 
