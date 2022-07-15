@@ -1,0 +1,36 @@
+on:
+  schedule:
+    - cron: '00 14 * * *'
+
+  push:
+    paths:
+      # Triggers only when relevant files are updated
+      - 'scrap.sh'
+      - 'github/workflows/scrap-and-save.yaml'
+    branches:
+      - master
+    tags-ignore:
+      - '**' # prevent duplicate builds for any push of release tags
+
+name: Scrap and save data
+
+jobs:
+  # Attempt to build and store the result as GitHub Action artifact
+  scrap:
+    name: Scrap latest mark six data from HKJC
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@main
+        with:
+          fetch-depth: 0
+      - name: Fetch and save response from HKJC API
+        run:
+          bash scrap.sh
+      - name: Commit files
+        run: |
+          git config --global user.name ${{ secrets.GIT_USER_NAME }}
+          git config --global user.email ${{ secrets.GIT_USER_EMAIL }}
+          git add .
+          git commit -m "chore: new updates fetched on $(date +"%Y/%m/%d %H:%M:%S")"
+          git push
