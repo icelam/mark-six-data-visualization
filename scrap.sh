@@ -9,17 +9,17 @@ MAXIMUM_RETRY_PER_REQUEST=5
 
 START_YEAR=1993
 CURRENT_YEAR=$(date +"%Y")
-DATE_RANGES="0101;0331 0401;0630 0701;0930 1001;1231"
+DATE_RANGES="0101-0331 0401-0630 0701-0930 1001-1231"
 
 mkdir -p $RAW_DIRECTORY
 mkdir -p $OUTPUT_DIRECTORY
 
-i=$START_YEAR
-while [ $i -le $CURRENT_YEAR ]
+
+for ((i=$START_YEAR; i<=$CURRENT_YEAR; i++))
 do
   for quarter in $DATE_RANGES
   do
-    dates=($(echo $quarter | sed 's/;/ /g'))
+    dates=(${quarter//-/ })
     output_file="./$RAW_DIRECTORY/${i}${dates[0]}-${i}${dates[1]}.json";
     readable_date_range="${i}/${dates[0]:0:2}/${dates[0]:2:2} - ${i}/${dates[1]:0:2}/${dates[1]:2:2}"
 
@@ -55,8 +55,6 @@ do
       sleep $WAIT_SECONDS
     fi
   done
-
-  i=$(( i + 1 ))
 done
 
 jq '{ data: [ inputs ] | add } | .data[].no |= split("+")' $RAW_DIRECTORY/* > $OUTPUT_DIRECTORY/all.json
