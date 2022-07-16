@@ -1,3 +1,3 @@
-# Schedule Scrap Experiment
+# Schedule Scrape Experiment
 
-Experiment on using GitHub Action to scrap data and store it on GitHub
+Experiment on using GitHub Action to scrape data and store it on GitHub

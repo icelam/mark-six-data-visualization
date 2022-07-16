@@ -48,7 +48,7 @@ do
         echo "Process terminated after $((EXIT_TIME-EXECUTION_START_TIME))s."
         exit 1;
       else
-        echo "Scrap data for $readable_date_range success. (Status Code: ${status_code})"
+        echo "Scrape data for $readable_date_range success. (Status Code: ${status_code})"
       fi
 
       echo "Sleeping for ${WAIT_SECONDS} second(s)."

@@ -5,19 +5,19 @@ on:
   push:
     paths:
       # Triggers only when relevant files are updated
-      - 'scrap.sh'
-      - '.github/workflows/scrap-and-save.yml'
+      - 'scrape.sh'
+      - '.github/workflows/scrape-and-save.yml'
     branches:
       - master
     tags-ignore:
       - '**' # prevent duplicate builds for any push of release tags
 
-name: Scrap and save data
+name: Scrape and save data
 
 jobs:
   # Attempt to build and store the result as GitHub Action artifact
-  scrap:
-    name: Scrap latest mark six data from HKJC
+  scrape:
+    name: Scrape latest mark six data from HKJC
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -26,7 +26,7 @@ jobs:
           fetch-depth: 0
       - name: Fetch and save response from HKJC API
         run:
-          bash scrap.sh
+          bash scrape.sh
       - name: Commit files
         run: |
           git config --global user.name "github-actions[bot]"
