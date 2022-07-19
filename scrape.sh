@@ -8,7 +8,8 @@ WAIT_SECONDS=5
 MAXIMUM_RETRY_PER_REQUEST=5
 
 START_YEAR=1993
-CURRENT_YEAR=$(date +"%Y")
+CURRENT_DATE=$(date +"%Y%m%d")
+CURRENT_YEAR=${CURRENT_DATE:0:4}
 DATE_RANGES="0101-0331 0401-0630 0701-0930 1001-1231"
 
 mkdir -p $RAW_DIRECTORY
@@ -23,9 +24,9 @@ do
     output_file="./$RAW_DIRECTORY/${i}${dates[0]}-${i}${dates[1]}.json";
     readable_date_range="${i}/${dates[0]:0:2}/${dates[0]:2:2} - ${i}/${dates[1]:0:2}/${dates[1]:2:2}"
 
-    if [ -f "$output_file" ] && [ $i -ne $CURRENT_YEAR ]; then
+    if [[ -f "$output_file" ]] && [[ "$i${dates[1]}" -lt $CURRENT_DATE ]]; then
       echo "Skip scraping data for $readable_date_range as file exists."
-    else
+    elif [[ $CURRENT_DATE -ge "$i${dates[0]}" ]]; then
       echo "Scraping data for $readable_date_range."
 
       response=$(curl --location \
@@ -37,8 +38,8 @@ do
       --retry $MAXIMUM_RETRY_PER_REQUEST \
       --retry-delay $WAIT_SECONDS)
 
-      response_body=$(echo $response | sed -E 's/status_code\:[0-9]{3}$//')
-      status_code=$(echo $response | tr -d '\n' | sed -E 's/.*status_code:([0-9]{3})$/\1/')
+      response_body=$(echo $response | sed -E "s/status_code\:[0-9]{3}$//")
+      status_code=$(echo $response | tr -d "\n" | sed -E "s/.*status_code:([0-9]{3})$/\1/")
 
       if [[ "$status_code" -ge 300 || "$status_code" -lt 200 ]] ; then
         echo "Error encountered when scraping data for $readable_date_range. (Status Code: ${status_code})"
