@@ -25,6 +25,11 @@ def remove_none_from_list(data):
 
 ball_colors = load_color_definations(os.path.join(os.path.dirname(__file__), '../data/ball-colors.json'));
 
+st.set_page_config(
+    page_title="Mark Six Statistics",
+    page_icon="🎱",
+    layout="centered",
+)
 st.title('Mark Six Statistics')
 
 st.markdown(
@@ -96,108 +101,107 @@ with tab1:
 
     if group_by == 'Ball colors':
         balls_summary = balls_summary.groupby(by='color').sum()
-        balls_summary['color'] = balls_summary.index
+        balls_summary.drop(columns='ball', inplace=True)
+        balls_summary.insert(0, 'color', balls_summary.index)
     elif group_by == 'Odd / Even':
-        balls_summary['odd_or_even'] = balls_summary.ball.apply(lambda x: 'odd' if x % 2 == 0 else 'even')
-        balls_summary = balls_summary.groupby(by='odd_or_even').sum()
-        balls_summary['odd_or_even'] = balls_summary.index
+        balls_summary['parity'] = balls_summary.ball.apply(lambda x: 'odd' if x % 2 == 0 else 'even')
+        balls_summary = balls_summary.groupby(by='parity').sum()
+        balls_summary.sort_values(by='parity', ascending=False, inplace=True)
+        balls_summary.insert(0, 'odd_or_even', balls_summary.index)
+
         balls_summary.drop(columns='color', inplace=True)
+        balls_summary.drop(columns='ball', inplace=True)
+
+    balls_summary.reset_index(inplace=True, drop=True)
 
     # A customized version of st.bar_chart(histogram_values)
     # List of ptions: https://altair-viz.github.io/user_guide/customization.html
+    chart_data = (
+        alt.Chart(balls_summary)
+            .transform_fold(remove_none_from_list([
+                'count',
+                'special_count' if include_special_number == 'Yes' else None
+            ]))
+            .mark_bar()
+            .configure_axis(grid=False)
+            .configure_view(strokeWidth=0)
+            .properties(height=500)
+    )
+
     if group_by == 'None':
         chart_data = (
-            alt.Chart(balls_summary)
-                .transform_fold(remove_none_from_list([
-                    'count',
-                    'special_count' if include_special_number == 'Yes' else None
-                ]))
-                .mark_bar()
-                .encode(
-                    x=alt.X('ball:O', title='Balls'),
-                    y=alt.Y('value:Q', title='Occurrence'),
-                    color=alt.Color(
-                        'color',
-                        scale=alt.Scale(
-                            domain=['red', 'blue', 'green'],
-                            range=['lightcoral', 'royalblue', 'mediumseagreen']
-                        ),
-                        legend=None
+            chart_data.encode(
+                x=alt.X('ball:O', title='Balls'),
+                y=alt.Y('value:Q', title='Occurrence'),
+                color=alt.Color(
+                    'color',
+                    scale=alt.Scale(
+                        domain=['red', 'blue', 'green'],
+                        range=['lightcoral', 'royalblue', 'mediumseagreen']
                     ),
-                    opacity=alt.Opacity(
-                        'value:Q',
-                        legend=None
-                    ),
-                    tooltip=remove_none_from_list([
-                        alt.Tooltip('ball', title='Ball'),
-                        alt.Tooltip('count', title='Occurrence'),
-                        alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
-                        alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
-                    ])
-                )
-                .configure_axis(grid=False)
-                .configure_view(strokeWidth=0)
-                .properties(height=500)
-        )  
+                    legend=None
+                ),
+                opacity=alt.Opacity(
+                    'value:Q',
+                    legend=None
+                ),
+                tooltip=remove_none_from_list([
+                    alt.Tooltip('ball', title='Ball'),
+                    alt.Tooltip('count', title='Occurrence'),
+                    alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
+                    alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
+                ])
+            )
+        )
     elif group_by == 'Ball colors':
         chart_data = (
-            alt.Chart(balls_summary)
-                .transform_fold(remove_none_from_list([
-                    'count',
-                    'special_count' if include_special_number == 'Yes' else None
-                ]))
-                .mark_bar()
-                .encode(
-                    x=alt.X('color:N', title='Color'),
-                    y=alt.Y('value:Q', title='Occurrence'),
-                    color=alt.Color(
-                        'color',
-                        scale=alt.Scale(
-                            domain=['red', 'blue', 'green'],
-                            range=['lightcoral', 'royalblue', 'mediumseagreen']
-                        ),
-                        legend=None
+            chart_data.encode(
+                x=alt.X('color:N', title='Color'),
+                y=alt.Y('value:Q', title='Occurrence'),
+                color=alt.Color(
+                    'color',
+                    scale=alt.Scale(
+                        domain=['red', 'blue', 'green'],
+                        range=['lightcoral', 'royalblue', 'mediumseagreen']
                     ),
-                    opacity=alt.Opacity(
-                        'value:Q',
-                        legend=None
-                    ),
-                    tooltip=remove_none_from_list([
-                        alt.Tooltip('ball', title='Ball'),
-                        alt.Tooltip('count', title='Occurrence'),
-                        alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
-                        alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
-                    ])
-                )
-                .configure_axis(grid=False)
-                .configure_view(strokeWidth=0)
-                .properties(height=500)
+                    legend=None
+                ),
+                opacity=alt.Opacity(
+                    'value:Q',
+                    legend=None
+                ),
+                tooltip=remove_none_from_list([
+                    alt.Tooltip('color', title='Color'),
+                    alt.Tooltip('count', title='Occurrence'),
+                    alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
+                    alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
+                ])
+            )
         )
     elif group_by == 'Odd / Even':
         chart_data = (
-            alt.Chart(balls_summary)
-                .transform_fold(remove_none_from_list([
-                    'count',
-                    'special_count' if include_special_number == 'Yes' else None
-                ]))
-                .mark_bar()
-                .encode(
-                    x=alt.X('odd_or_even:N', title='Odd / Even'),
-                    y=alt.Y('value:Q', title='Occurrence'),
-                    opacity=alt.Opacity(
-                        'value:Q',
-                        legend=None
+            chart_data.encode(
+                x=alt.X('odd_or_even:N', title='Odd / Even', sort="descending"),
+                y=alt.Y('value:Q', title='Occurrence'),
+                color=alt.Color(
+                    'odd_or_even',
+                    scale=alt.Scale(
+                        domain=['odd', 'even'],
+                        range=['lightcoral', 'royalblue']
                     ),
-                    tooltip=remove_none_from_list([
-                        alt.Tooltip('ball', title='Ball'),
-                        alt.Tooltip('count', title='Occurrence'),
-                        alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
-                        alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
-                    ])
-                )
-                .configure_axis(grid=False)
-                .configure_view(strokeWidth=0)
-                .properties(height=500)
+                    legend=None
+                ),
+                opacity=alt.Opacity(
+                    'value:Q',
+                    legend=None
+                ),
+                tooltip=remove_none_from_list([
+                    alt.Tooltip('odd_or_even', title='Odd / Even'),
+                    alt.Tooltip('count', title='Occurrence'),
+                    alt.Tooltip('special_count', title='Occurrence (Special)') if include_special_number == 'Yes' else None,
+                    alt.Tooltip('total_count', title='Total Occurrence') if include_special_number == 'Yes' else None
+                ])
+            )
         )
 
     st.altair_chart(chart_data, use_container_width=True)
