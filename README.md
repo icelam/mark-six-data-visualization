@@ -21,7 +21,7 @@ pipenv --python 3.9.9
 ### 2. Installing dependencies
 
 ```bash
-pipenv install --dev
+pipenv install --skip-lock --dev
 ```
 
 ### 3. Starting Streamlit

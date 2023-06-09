@@ -5,7 +5,7 @@ TEST_FOLDER=tests
 
 # Init new virtual environment
 create-venv:
-	pipenv --python 3.9.9
+	pipenv --python 3.10.2
 
 # Remove existing virtual environment
 clean-venv:
