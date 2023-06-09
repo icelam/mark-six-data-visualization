@@ -31,4 +31,4 @@ pipenv run streamlit run web/main.py
 ```
 
 ## Special Thanks
-Special thanks to @tonberry22 for his generous help with completing the code for this project.
+Special thanks to [@tonberry22](https://github.com/tonberry22) for his generous help with completing the code for this project.
