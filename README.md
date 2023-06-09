@@ -15,7 +15,7 @@ The data automatically updated using GitHub actions everyday at 10:00 pm (Hong K
 ### 1. Setting up virtual environment
 
 ```bash
-pipenv --python 3.9.9
+pipenv --python 3.10.2
 ```
 
 ### 2. Installing dependencies
@@ -29,3 +29,6 @@ pipenv install --skip-lock --dev
 ```bash
 pipenv run streamlit run web/main.py
 ```
+
+## Special Thanks
+Special thanks to @tonberry22 for his generous help with completing the code for this project.
