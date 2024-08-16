@@ -32,7 +32,7 @@ do
       response=$(curl --location \
       --silent \
       --write-out "status_code:%{http_code}" \
-      --request GET "https://bet.hkjc.com/marksix/getJSON.aspx/?sd=${i}${dates[0]}&ed=${i}${dates[1]}&sb=0" \
+      --request GET "https://bet2.hkjc.com/marksix/getJSON.aspx/?sd=${i}${dates[0]}&ed=${i}${dates[1]}&sb=0" \
       --output $output_file \
       --compressed \
       --retry $MAXIMUM_RETRY_PER_REQUEST \
@@ -58,15 +58,20 @@ do
   done
 done
 
-jq '(([ ., inputs ] | add) | .[].no |= split("+"))
+jq -e '(([ ., inputs ] | add) | .[].no |= split("+"))
 | .[].date |= (strptime("%d/%m/%Y") | mktime | strftime("%Y-%m-%d"))
 | . |= sort_by(.date) | reverse' $RAW_DIRECTORY/* > $OUTPUT_DIRECTORY/all.json
 
-jq '{ 
+if [[ "$?" -gt 0 ]] ; then
+  echo "Cannot parse raw JSON, exiting..."
+  exit 1
+fi
+
+jq -e '{
   total: . | length,
   stats_without_sno: (
     [.[].no[]] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
-  ) | add, 
+  ) | add,
   stats_with_sno: (
     [.[].no[],.[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
   ) | add,
@@ -74,6 +79,11 @@ jq '{
     [.[].sno] | map(tonumber) | sort | group_by(.) | map({ (.[0] | tostring): select(.) | length })
   ) | add
 }' $OUTPUT_DIRECTORY/all.json > $OUTPUT_DIRECTORY/stats.json
+
+if [[ "$?" -gt 0 ]] ; then
+  echo "Failed to generate stats, exiting..."
+  exit 1
+fi
 
 EXECUTION_END_TIME=$(date +"%s")
 echo "Done in $((EXECUTION_END_TIME-EXECUTION_START_TIME))s."
